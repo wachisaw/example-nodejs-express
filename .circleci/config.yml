@@ -18,7 +18,7 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
       - run: npm test
       - setup_remote_docker
-      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
       - run:
           name: "Build docker image and push to docker hub"
           command: |
@@ -31,10 +31,10 @@ jobs:
           name: "Call to rancher to deploy"
           command: |
             docker run --rm -it \
-              -e CATTLE_ACCESS_KEY="$CATTLE_ACCESS_KEY" \
-              -e CATTLE_SECRET_KEY="$CATTLE_SECRET_KEY" \
+              -e CATTLE_ACCESS_KEY="${CATTLE_ACCESS_KEY}" \
+              -e CATTLE_SECRET_KEY="${CATTLE_SECRET_KEY}" \
               -e CATTLE_URL="$CATTLE_URL" \
-              etlweather/gaucho upgrade $RANCHER_EXAMPLE_NODEJS \
+              etlweather/gaucho upgrade ${RANCHER_EXAMPLE_NODEJS} \
               --imageUuid 'docker:wachisaw/example-nodejs-circle:latest' \
               --batch_size 3 --start_first \
               --auto_complete --timeout 600 \
