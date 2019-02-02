@@ -18,7 +18,7 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
       - run: npm test
       - setup_remote_docker
-      - run: docker login -u wachisaw -p tenchiro10
+      - run: docker login -u wachisaw -p Tenchiro1@
       - run:
           name: "Build docker image and push to docker hub"
           command: |
