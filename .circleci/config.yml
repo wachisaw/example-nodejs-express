@@ -55,7 +55,6 @@ jobs:
               --auto_complete --timeout 600 \
               /
       - run: echo Done
-
 workflows:
   version: 2
   build_test_ship_deploy:
