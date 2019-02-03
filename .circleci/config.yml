@@ -28,6 +28,9 @@ jobs:
           - v1-dependencies-
       - run: npm test
   ship:
+    docker:
+      - image: scratch
+    working_directory: ~/repo
     steps:
       - checkout
       - setup_remote_docker
@@ -41,6 +44,9 @@ jobs:
             docker push wachisaw/example-nodejs-circle:latest
             docker push wachisaw/example-nodejs-circle:${CIRCLE_SHA1}
   deploy:
+    docker:
+      - image: scratch
+    working_directory: ~/repo
     steps:
       - run:
           name: "Call to rancher to deploy"
