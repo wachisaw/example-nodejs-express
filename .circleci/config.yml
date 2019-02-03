@@ -16,27 +16,57 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-      - run: npm test
-      - setup_remote_docker
-      - run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-      - run:
-          name: "Build docker image and push to docker hub"
-          command: |
-            cp Dockerfile.production Dockerfile
-            docker build -t wachisaw/example-nodejs-circle:latest .
-            docker build -t wachisaw/example-nodejs-circle:${CIRCLE_SHA1} .
-            docker push wachisaw/example-nodejs-circle:latest
-            docker push wachisaw/example-nodejs-circle:${CIRCLE_SHA1}
-      - run:
-          name: "Call to rancher to deploy"
-          command: |
-            docker run --rm -it \
-              -e CATTLE_ACCESS_KEY="${CATTLE_ACCESS_KEY}" \
-              -e CATTLE_SECRET_KEY="${CATTLE_SECRET_KEY}" \
-              -e CATTLE_URL="$CATTLE_URL" \
-              etlweather/gaucho upgrade ${RANCHER_EXAMPLE_NODEJS} \
-              --imageUuid 'docker:wachisaw/example-nodejs-circle:latest' \
-              --batch_size 3 --start_first \
-              --auto_complete --timeout 600 \
-              /
-      - run: echo Done
+    test:
+      docker:
+        - image: circleci/node:8.11.1-stretch
+      working_directory: ~/repo
+      steps:
+        - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback 
+            - v1-dependencies-
+        - run: npm test
+    ship:
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        - run:
+            name: "Build docker image and push to docker hub"
+            command: |
+              cp Dockerfile.production Dockerfile
+              docker build -t wachisaw/example-nodejs-circle:latest .
+              docker build -t wachisaw/example-nodejs-circle:${CIRCLE_SHA1} .
+              docker push wachisaw/example-nodejs-circle:latest
+              docker push wachisaw/example-nodejs-circle:${CIRCLE_SHA1}
+    deploy:
+      steps:
+        - run:
+            name: "Call to rancher to deploy"
+            command: |
+              docker run --rm -it \
+                -e CATTLE_ACCESS_KEY="${CATTLE_ACCESS_KEY}" \
+                -e CATTLE_SECRET_KEY="${CATTLE_SECRET_KEY}" \
+                -e CATTLE_URL="$CATTLE_URL" \
+                etlweather/gaucho upgrade ${RANCHER_EXAMPLE_NODEJS} \
+                --imageUuid 'docker:wachisaw/example-nodejs-circle:latest' \
+                --batch_size 3 --start_first \
+                --auto_complete --timeout 600 \
+                /
+        - run: echo Done
+
+workflows:
+  version: 2
+  build_test_ship_deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - ship:
+          requires:
+            - test
+      - deploy:
+          requires:
+            - ship
