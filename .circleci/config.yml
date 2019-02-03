@@ -30,7 +30,7 @@ jobs:
       - run: npm test
   ship:
     docker:
-      - image: scratch
+      - image: ubuntu
     working_directory: ~/repo
     steps:
       - checkout
@@ -46,7 +46,7 @@ jobs:
             docker push wachisaw/example-nodejs-circle:${CIRCLE_SHA1}
   deploy:
     docker:
-      - image: scratch
+      - image: ubuntu
     working_directory: ~/repo
     steps:
       - run:
